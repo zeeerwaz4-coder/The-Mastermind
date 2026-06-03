@@ -2,22 +2,183 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mastermind: Tactical War</title>
-    <!-- Link your CSS file -->
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tactical Chess MOBA</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0f1115;
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            user-select: none;
+        }
+
+        .moba-container {
+            display: flex;
+            gap: 20px;
+            background: #1a1d24;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            border: 1px solid #2d3139;
+        }
+
+        /* The MOBA Battlefield Grid */
+        .battlefield {
+            display: grid;
+            grid-template-columns: repeat(12, 55px);
+            grid-template-rows: repeat(12, 55px);
+            gap: 2px;
+            background: #252932;
+            padding: 4px;
+            border-radius: 6px;
+        }
+
+        .node {
+            width: 55px;
+            height: 55px;
+            background-color: #1e222b;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .node:hover {
+            background-color: #2d3341;
+        }
+
+        /* Tactical Lanes paths */
+        .lane-node {
+            background-color: #283141;
+            border: 1px solid #3b4861;
+        }
+
+        /* MOBA Entities */
+        .hero {
+            font-size: 1.8rem;
+            z-index: 2;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+        }
+
+        .structure {
+            font-size: 1.6rem;
+            color: #ff4655;
+        }
+
+        /* Tactical HUD & Skill Bar */
+        .hud {
+            display: flex;
+            flex-direction: column;
+            width: 250px;
+            gap: 15px;
+        }
+
+        .panel {
+            background: #11141a;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #2d3139;
+        }
+
+        .skill-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .skill-btn:hover { background: #1d4ed8; }
+
+        /* Ranges and targeting overlays */
+        .in-range { background-color: rgba(59, 130, 246, 0.3) !important; }
+        .selected { border: 2px solid #3b82f6; background-color: #232d42; }
+    </style>
 </head>
 <body>
 
-    <div id="ui-container">
-        <h3>🧠 MASTERMIND COMMANDER VIEW</h3>
-        <p id="status-display">Tap a unit to activate deployment circle...</p>
+<div class="moba-container">
+    <!-- Map Canvas/Grid -->
+    <div class="battlefield" id="map"></div>
+
+    <!-- MOBA UI / Hero Control Panel -->
+    <div class="hud">
+        <div class="panel">
+            <h3 style="margin: 0 0 5px 0; color: #3b82f6;">Assassin (Knight)</h3>
+            <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">Moves in tactical L-shapes to bypass frontline tanks.</p>
+            <button class="skill-btn">Flank Jump (Active)</button>
+        </div>
+        <div class="panel">
+            <h3 style="margin: 0 0 5px 0; color: #ff4655;">Enemy Base</h3>
+            <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">Infiltrate the backline to destroy the core structure.</p>
+        </div>
     </div>
+</div>
 
-    <!-- The Square Battlefield Grid -->
-    <div id="game-board"></div>
+<script>
+    const map = document.getElementById('map');
+    const width = 12;
+    const height = 12;
 
-    <!-- Link your JavaScript file -->
-    <script src="script.js"></script>
+    // Define simple lane paths (Top, Middle, Bottom tracks)
+    function isLane(r, c) {
+        if (r === c) return true; // Diagonal mid lane
+        if (r === 1 || r === height - 2) return true; // Top/Bottom lanes
+        if (c === 1 || c === width - 2) return true; // Side lanes
+        return false;
+    }
+
+    // Populate a 12x12 tactical MOBA arena layout
+    for (let r = 0; r < height; r++) {
+        for (let c = 0; c < width; c++) {
+            const node = document.createElement('div');
+            node.classList.add('node');
+            
+            if (isLane(r, c)) {
+                node.classList.add('lane-node');
+            }
+
+            // Spawn Radiant Team Hero (Chess Knight logic wrapper)
+            if (r === 10 && c === 1) {
+                node.innerHTML = '<span class="hero">♞</span>';
+                node.classList.add('selected');
+            }
+
+            // Spawn Dire Team Structures / Key Targets
+            if (r === 1 && c === 10) {
+                node.innerHTML = '<span class="structure">🗼</span>';
+            }
+
+            // Display attack/move range preview on click
+            node.addEventListener('click', () => {
+                document.querySelectorAll('.node').forEach(n => n.classList.remove('in-range'));
+                // Simulate tactical map awareness/range display
+                if (node.classList.contains('lane-node')) {
+                    node.classList.add('in-range');
+                }
+            });
+
+            map.appendChild(node);
+        }
+    }
+</script>
+
 </body>
 </html>
